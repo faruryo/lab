@@ -44,6 +44,16 @@ func loadConfig() (string, string, string, bool) {
 		viper.AddConfigPath(gitDir)
 	}
 
+	if _, ok := viper.ReadInConfig().(viper.ConfigFileNotFoundError); ok {
+		if err := config.New(path.Join(confpath, "lab.hcl"), os.Stdin); err != nil {
+			log.Fatal(err)
+		}
+
+		if err := viper.ReadInConfig(); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	viper.SetEnvPrefix("LAB")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
@@ -63,16 +73,6 @@ func loadConfig() (string, string, string, bool) {
 	host, user, token = config.CI()
 	if host != "" && user != "" && token != "" {
 		return host, user, token, tlsSkipVerify
-	}
-
-	if _, ok := viper.ReadInConfig().(viper.ConfigFileNotFoundError); ok {
-		if err := config.New(path.Join(confpath, "lab.hcl"), os.Stdin); err != nil {
-			log.Fatal(err)
-		}
-
-		if err := viper.ReadInConfig(); err != nil {
-			log.Fatal(err)
-		}
 	}
 
 	c := viper.AllSettings()
